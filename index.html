@@ -228,6 +228,7 @@
                                 // Autoplay worked - unmute and update UI
                                 try {
                                     player.unMute();
+                                    player.setVolume(100);
                                     isPlaying = true;
                                     updateButtonIcon(true);
                                 } catch (error) {
@@ -272,6 +273,7 @@
                         setTimeout(function() {
                             try {
                                 player.unMute();
+                                player.setVolume(100);
                                 isPlaying = true;
                                 updateButtonIcon(true);
                             } catch (error) {
@@ -333,6 +335,7 @@
                     setTimeout(function() {
                         try {
                             player.unMute();
+                            player.setVolume(100);
                         } catch (error) {
                             console.log('Error unmuting:', error);
                         }
