@@ -178,7 +178,7 @@
     <!-- Hidden background music video -->
     <iframe
         id="youtubeVideo"
-        style="display: none;"
+        style="position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; pointer-events: none;"
         src=""
         frameborder="0"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -194,10 +194,17 @@
         const videoId = 'f0F6jMTPlY4';
         let player;
         let isPlaying = false;
+        let playerReady = false;
 
-        // Initialize YouTube player when API is ready
-        function onYouTubeIframeAPIReady() {
-            player = new YT.Player('youtubeVideo', {
+        // Initialize YouTube player when API is ready (must be global)
+        window.onYouTubeIframeAPIReady = function() {
+            if (typeof YT === 'undefined' || typeof YT.Player === 'undefined') {
+                console.error('YouTube API not loaded');
+                return;
+            }
+
+            try {
+                player = new YT.Player('youtubeVideo', {
                 videoId: videoId,
                 playerVars: {
                     autoplay: 1,
@@ -214,7 +221,9 @@
                 },
                 events: {
                     onReady: function(event) {
-                        // Video is ready and playing
+                        // Video is ready - start playing
+                        playerReady = true;
+                        player.playVideo();
                         isPlaying = true;
                         updateButtonIcon(true);
                     },
@@ -229,7 +238,10 @@
                         }
                     }
                 }
-            });
+                });
+            } catch (error) {
+                console.error('Error initializing YouTube player:', error);
+            }
         }
 
         // Update button icon based on play state
@@ -246,14 +258,20 @@
             }
         }
 
-        // Toggle play/pause
+        // Button to pause/play video
         musicButton.addEventListener('click', function() {
-            if (player) {
+            if (!playerReady || !player) {
+                return;
+            }
+
+            try {
                 if (isPlaying) {
                     player.pauseVideo();
                 } else {
                     player.playVideo();
                 }
+            } catch (error) {
+                console.error('Error controlling video:', error);
             }
         });
     </script>
