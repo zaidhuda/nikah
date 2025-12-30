@@ -219,7 +219,12 @@
                         // Video is ready - start playing muted (browsers allow muted autoplay)
                         playerReady = true;
                         autoplayAttempted = true;
-                        player.playVideo();
+
+                        try {
+                            player.playVideo();
+                        } catch (error) {
+                            console.log('Error starting autoplay:', error);
+                        }
 
                         // Check if playback actually started
                         setTimeout(function() {
@@ -240,19 +245,39 @@
                                 updateButtonIcon(false);
                                 startPlaybackOnInteraction();
                             }
-                        }, 500);
+                        }, 1000);
                     },
                     onStateChange: function(event) {
                         // Update button icon based on playback state
                         if (event.data === YT.PlayerState.PLAYING) {
                             isPlaying = true;
+                            // If we just started playing and it was from autoplay, unmute
+                            if (autoplayAttempted && !userInteractionListener) {
+                                try {
+                                    player.unMute();
+                                    player.setVolume(100);
+                                } catch (error) {
+                                    console.log('Error unmuting:', error);
+                                }
+                            }
                             updateButtonIcon(true);
                         } else if (event.data === YT.PlayerState.PAUSED) {
                             isPlaying = false;
                             updateButtonIcon(false);
                         } else if (event.data === YT.PlayerState.CUED) {
-                            // Video is cued and ready
-                            player.playVideo();
+                            // Video is cued and ready - try to play if autoplay was attempted
+                            if (autoplayAttempted && !isPlaying) {
+                                try {
+                                    player.playVideo();
+                                } catch (error) {
+                                    console.log('Error playing cued video:', error);
+                                }
+                            }
+                        } else if (event.data === YT.PlayerState.UNSTARTED) {
+                            // If autoplay was attempted but video is unstarted, wait for interaction
+                            if (autoplayAttempted && !isPlaying && !userInteractionListener) {
+                                startPlaybackOnInteraction();
+                            }
                         }
                     }
                 }
@@ -269,17 +294,19 @@
             function handleInteraction() {
                 if (player && playerReady && !isPlaying) {
                     try {
+                        // Ensure video is unmuted before playing
+                        player.unMute();
+                        player.setVolume(100);
                         player.playVideo();
+
+                        // Verify playback started
                         setTimeout(function() {
-                            try {
-                                player.unMute();
-                                player.setVolume(100);
+                            var state = player.getPlayerState();
+                            if (state === YT.PlayerState.PLAYING) {
                                 isPlaying = true;
                                 updateButtonIcon(true);
-                            } catch (error) {
-                                console.log('Error unmuting:', error);
                             }
-                        }, 100);
+                        }, 200);
                     } catch (error) {
                         console.error('Error starting playback:', error);
                     }
@@ -288,13 +315,15 @@
                 document.removeEventListener('click', handleInteraction);
                 document.removeEventListener('touchstart', handleInteraction);
                 document.removeEventListener('keydown', handleInteraction);
+                document.removeEventListener('mousedown', handleInteraction);
                 userInteractionListener = null;
             }
 
-            // Listen for any user interaction
-            document.addEventListener('click', handleInteraction, { once: true });
-            document.addEventListener('touchstart', handleInteraction, { once: true });
+            // Listen for any user interaction (more events for better coverage)
+            document.addEventListener('click', handleInteraction, { once: true, passive: true });
+            document.addEventListener('touchstart', handleInteraction, { once: true, passive: true });
             document.addEventListener('keydown', handleInteraction, { once: true });
+            document.addEventListener('mousedown', handleInteraction, { once: true, passive: true });
             userInteractionListener = handleInteraction;
         }
 
@@ -313,15 +342,39 @@
         }
 
         // Button to pause/play video
-        musicButton.addEventListener('click', function() {
+        musicButton.addEventListener('click', function(e) {
+            e.stopPropagation(); // Prevent triggering document click listener
+
             if (!playerReady || !player) {
                 return;
             }
 
             // If this is the first interaction and autoplay was blocked, start playback
-            if (autoplayAttempted && !isPlaying && userInteractionListener) {
-                if (userInteractionListener) {
-                    userInteractionListener();
+            if (autoplayAttempted && !isPlaying) {
+                try {
+                    // Remove any pending interaction listeners
+                    if (userInteractionListener) {
+                        document.removeEventListener('click', userInteractionListener);
+                        document.removeEventListener('touchstart', userInteractionListener);
+                        document.removeEventListener('keydown', userInteractionListener);
+                        document.removeEventListener('mousedown', userInteractionListener);
+                        userInteractionListener = null;
+                    }
+
+                    // Start playback
+                    player.unMute();
+                    player.setVolume(100);
+                    player.playVideo();
+
+                    setTimeout(function() {
+                        var state = player.getPlayerState();
+                        if (state === YT.PlayerState.PLAYING) {
+                            isPlaying = true;
+                            updateButtonIcon(true);
+                        }
+                    }, 200);
+                } catch (error) {
+                    console.error('Error starting playback:', error);
                 }
                 return;
             }
