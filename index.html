@@ -43,10 +43,9 @@
             box-sizing: border-box;
         }
 
-        html, body {
-            height: 100%;
-            width: 100%;
-            overflow: hidden;
+        html {
+            overflow-x: hidden;
+            overflow-y: auto;
         }
 
         body {
@@ -54,19 +53,21 @@
             justify-content: center;
             align-items: center;
             background-color: white;
-            margin: 10px;
-            height: calc(100% - 20px);
-            width: calc(100% - 20px);
+            margin: 0;
+            min-height: 100vh;
+            width: 100%;
+            padding: 60px;
+            box-sizing: border-box;
+            overflow: visible;
         }
 
         .image-container {
             width: 100%;
-            height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
             overflow: visible;
-            padding: 30px;
+            padding: 50px;
             box-sizing: border-box;
         }
 
@@ -77,7 +78,7 @@
             height: auto;
             object-fit: contain;
             object-position: center;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+            filter: drop-shadow(0 15px 40px rgba(0, 0, 0, 0.3));
         }
 
         /* Ensure fullscreen on mobile devices */
@@ -102,18 +103,21 @@
         /* Reduce margin on mobile devices */
         @media (max-width: 768px) {
             body {
-                margin: 5px;
-                height: calc(100% - 10px);
-                width: calc(100% - 10px);
+                margin: 0;
+                min-height: 100vh;
+                width: 100%;
+                padding: 10px 5px;
+                overflow: visible;
             }
 
             .image-container {
-                padding: 10px;
+                padding: 10px 5px;
+                overflow: visible;
             }
 
             .wedding-image {
-                max-width: calc(100% - 20px);
-                max-height: calc(100% - 20px);
+                max-width: calc(100% - 10px);
+                max-height: calc(100vh - 20px);
             }
         }
 
