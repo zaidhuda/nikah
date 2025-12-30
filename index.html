@@ -187,6 +187,8 @@
         let player;
         let isPlaying = false;
         let playerReady = false;
+        let autoplayAttempted = false;
+        let userInteractionListener = null;
 
         // Initialize YouTube player when API is ready (must be global)
         window.onYouTubeIframeAPIReady = function() {
@@ -207,17 +209,37 @@
                     iv_load_policy: 3,
                     loop: 1,
                     modestbranding: 1,
+                    mute: 1,
                     playsinline: 1,
                     rel: 0,
                     showinfo: 0
                 },
                 events: {
                     onReady: function(event) {
-                        // Video is ready - start playing
+                        // Video is ready - start playing muted (browsers allow muted autoplay)
                         playerReady = true;
+                        autoplayAttempted = true;
                         player.playVideo();
-                        isPlaying = true;
-                        updateButtonIcon(true);
+
+                        // Check if playback actually started
+                        setTimeout(function() {
+                            var state = player.getPlayerState();
+                            if (state === YT.PlayerState.PLAYING) {
+                                // Autoplay worked - unmute and update UI
+                                try {
+                                    player.unMute();
+                                    isPlaying = true;
+                                    updateButtonIcon(true);
+                                } catch (error) {
+                                    console.log('Error unmuting:', error);
+                                }
+                            } else {
+                                // Autoplay was blocked - wait for user interaction
+                                isPlaying = false;
+                                updateButtonIcon(false);
+                                startPlaybackOnInteraction();
+                            }
+                        }, 500);
                     },
                     onStateChange: function(event) {
                         // Update button icon based on playback state
@@ -227,6 +249,9 @@
                         } else if (event.data === YT.PlayerState.PAUSED) {
                             isPlaying = false;
                             updateButtonIcon(false);
+                        } else if (event.data === YT.PlayerState.CUED) {
+                            // Video is cued and ready
+                            player.playVideo();
                         }
                     }
                 }
@@ -234,6 +259,41 @@
             } catch (error) {
                 console.error('Error initializing YouTube player:', error);
             }
+        }
+
+        // Start playback on first user interaction if autoplay was blocked
+        function startPlaybackOnInteraction() {
+            if (userInteractionListener) return; // Already set up
+
+            function handleInteraction() {
+                if (player && playerReady && !isPlaying) {
+                    try {
+                        player.playVideo();
+                        setTimeout(function() {
+                            try {
+                                player.unMute();
+                                isPlaying = true;
+                                updateButtonIcon(true);
+                            } catch (error) {
+                                console.log('Error unmuting:', error);
+                            }
+                        }, 100);
+                    } catch (error) {
+                        console.error('Error starting playback:', error);
+                    }
+                }
+                // Remove listeners after first interaction
+                document.removeEventListener('click', handleInteraction);
+                document.removeEventListener('touchstart', handleInteraction);
+                document.removeEventListener('keydown', handleInteraction);
+                userInteractionListener = null;
+            }
+
+            // Listen for any user interaction
+            document.addEventListener('click', handleInteraction, { once: true });
+            document.addEventListener('touchstart', handleInteraction, { once: true });
+            document.addEventListener('keydown', handleInteraction, { once: true });
+            userInteractionListener = handleInteraction;
         }
 
         // Update button icon based on play state
@@ -256,11 +316,27 @@
                 return;
             }
 
+            // If this is the first interaction and autoplay was blocked, start playback
+            if (autoplayAttempted && !isPlaying && userInteractionListener) {
+                if (userInteractionListener) {
+                    userInteractionListener();
+                }
+                return;
+            }
+
             try {
                 if (isPlaying) {
                     player.pauseVideo();
                 } else {
                     player.playVideo();
+                    // Ensure unmuted when user manually plays
+                    setTimeout(function() {
+                        try {
+                            player.unMute();
+                        } catch (error) {
+                            console.log('Error unmuting:', error);
+                        }
+                    }, 100);
                 }
             } catch (error) {
                 console.error('Error controlling video:', error);
