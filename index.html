@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wedding Invitation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: white;
+            margin: 10px;
+            height: calc(100% - 20px);
+            width: calc(100% - 20px);
+        }
+
+        .image-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: visible;
+            padding: 30px;
+            box-sizing: border-box;
+        }
+
+        .wedding-image {
+            max-width: calc(100% - 60px);
+            max-height: calc(100% - 60px);
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            object-position: center;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Ensure fullscreen on mobile devices */
+        @media (orientation: portrait) {
+            .wedding-image {
+                max-width: calc(100% - 60px);
+                max-height: calc(100% - 60px);
+                width: auto;
+                height: auto;
+            }
+        }
+
+        @media (orientation: landscape) {
+            .wedding-image {
+                max-width: calc(100% - 60px);
+                max-height: calc(100% - 60px);
+                width: auto;
+                height: auto;
+            }
+        }
+
+        /* Reduce margin on mobile devices */
+        @media (max-width: 768px) {
+            body {
+                margin: 5px;
+                height: calc(100% - 10px);
+                width: calc(100% - 10px);
+            }
+
+            .image-container {
+                padding: 10px;
+            }
+
+            .wedding-image {
+                max-width: calc(100% - 20px);
+                max-height: calc(100% - 20px);
+            }
+        }
+
+        /* Music button styles */
+        .music-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 2px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .music-button:hover {
+            background-color: rgba(255, 255, 255, 1);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+            transform: scale(1.05);
+        }
+
+        .music-button svg {
+            width: 24px;
+            height: 24px;
+            fill: #333;
+        }
+
+        /* Video container styles */
+        .video-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .video-container.show {
+            visibility: visible;
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .video-wrapper {
+            position: relative;
+            width: 90%;
+            max-width: 800px;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            height: 0;
+        }
+
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .close-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 24px;
+            color: #333;
+            z-index: 1001;
+            transition: all 0.3s ease;
+        }
+
+        .close-button:hover {
+            background-color: rgba(255, 255, 255, 1);
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 768px) {
+            .music-button {
+                top: 10px;
+                right: 10px;
+                width: 45px;
+                height: 45px;
+            }
+
+            .music-button svg {
+                width: 20px;
+                height: 20px;
+            }
+
+            .video-wrapper {
+                width: 95%;
+            }
+
+            .close-button {
+                top: 10px;
+                right: 10px;
+                width: 35px;
+                height: 35px;
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="image-container">
+        <img src="index.png" alt="Wedding Invitation" class="wedding-image">
+    </div>
+
+    <!-- Music Button -->
+    <button class="music-button" id="musicButton" aria-label="Play music">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+        </svg>
+    </button>
+
+    <!-- Video Container -->
+    <div class="video-container" id="videoContainer">
+        <div class="video-wrapper">
+            <iframe
+                id="youtubeVideo"
+                src=""
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerpolicy="strict-origin-when-cross-origin"
+                allowfullscreen>
+            </iframe>
+        </div>
+        <button class="close-button" id="closeButton" aria-label="Close video">×</button>
+    </div>
+
+    <script>
+        const musicButton = document.getElementById('musicButton');
+        const videoContainer = document.getElementById('videoContainer');
+        const closeButton = document.getElementById('closeButton');
+        const youtubeVideo = document.getElementById('youtubeVideo');
+        const videoId = 'f0F6jMTPlY4';
+        let isPlaying = false;
+
+        // Load video URL immediately (without autoplay) so it can start loading even when hidden
+        youtubeVideo.src = `https://www.youtube.com/embed/${videoId}?rel=0&si=rp0cJXLiiiE9CIvb`;
+
+        // Toggle video visibility
+        musicButton.addEventListener('click', function() {
+            videoContainer.classList.add('show');
+            // Add autoplay when opened
+            if (!isPlaying) {
+                youtubeVideo.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&si=rp0cJXLiiiE9CIvb`;
+                isPlaying = true;
+            }
+        });
+
+        // Close video
+        closeButton.addEventListener('click', function() {
+            videoContainer.classList.remove('show');
+            // Pause video by removing autoplay (but keep src so it stays loaded)
+            youtubeVideo.src = `https://www.youtube.com/embed/${videoId}?rel=0&si=rp0cJXLiiiE9CIvb`;
+            isPlaying = false;
+        });
+
+        // Close video when clicking outside
+        videoContainer.addEventListener('click', function(e) {
+            if (e.target === videoContainer) {
+                videoContainer.classList.remove('show');
+                youtubeVideo.src = `https://www.youtube.com/embed/${videoId}?rel=0&si=rp0cJXLiiiE9CIvb`;
+                isPlaying = false;
+            }
+        });
+    </script>
+</body>
+</html>
