@@ -72,6 +72,7 @@
             overflow: visible;
             padding: 0;
             box-sizing: border-box;
+            position: relative;
         }
 
         .wedding-image {
@@ -82,6 +83,136 @@
             object-fit: contain;
             object-position: center;
             filter: drop-shadow(0 15px 40px rgba(0, 0, 0, 0.3));
+            position: relative;
+        }
+
+        .image-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .address-overlay {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            cursor: pointer;
+            z-index: 100;
+            background: transparent;
+            border-radius: 8px;
+            /* Position will be set dynamically via JavaScript */
+            /* Default positioning - will be overridden */
+            bottom: 8%;
+            width: 75%;
+            height: 12%;
+        }
+
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            max-width: 90%;
+            width: 400px;
+            text-align: center;
+            animation: modalSlideIn 0.3s ease;
+            font-family: sans-serif;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+            font-family: sans-serif;
+        }
+
+        .modal-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .modal-button {
+            padding: 14px 24px;
+            border: 2px solid;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            font-family: sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background-color: transparent;
+        }
+
+        .modal-button.google-maps {
+            border-color: #4285F4;
+            color: #4285F4;
+        }
+
+        .modal-button.google-maps:hover {
+            background-color: #4285F4;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.4);
+        }
+
+        .modal-button.waze {
+            border-color: #33CCFF;
+            color: #33CCFF;
+        }
+
+        .modal-button.waze:hover {
+            background-color: #33CCFF;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(51, 204, 255, 0.4);
+        }
+
+        .modal-button.cancel {
+            border-color: #999;
+            color: #666;
+            margin-top: 8px;
+        }
+
+        .modal-button.cancel:hover {
+            background-color: #f5f5f5;
+            border-color: #666;
         }
 
 
@@ -103,6 +234,20 @@
             .wedding-image {
                 max-width: calc(100vw - 20px);
                 max-height: calc(100vh - 30px);
+            }
+
+            .address-overlay {
+                width: 90%;
+                height: 25%;
+            }
+
+            .modal-content {
+                padding: 24px;
+                width: 85%;
+            }
+
+            .modal-title {
+                font-size: 18px;
             }
         }
 
@@ -154,7 +299,35 @@
 </head>
 <body>
     <div class="image-container">
-        <img src="index.png" alt="Wedding Invitation" class="wedding-image">
+        <div class="image-wrapper">
+            <img src="index.png" alt="Wedding Invitation" class="wedding-image" id="weddingImage">
+            <div class="address-overlay" id="addressOverlay" aria-label="Click to open address in maps"></div>
+        </div>
+    </div>
+
+    <!-- Modal for map selection -->
+    <div id="mapModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">Open Location In</div>
+            <div class="modal-buttons">
+                <button class="modal-button google-maps" id="googleMapsBtn">
+                    <img src="https://www.google.com/maps/images/maps_logo_24px.png" alt="Google Maps" width="24" height="24" style="object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+                    <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="display:none;">
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#EA4335"/>
+                    </svg>
+                    Google Maps
+                </button>
+                <button class="modal-button waze" id="wazeBtn">
+                    <img src="https://www.waze.com/favicon.ico" alt="Waze" width="24" height="24" style="object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+                    <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="display:none;">
+                        <circle cx="12" cy="12" r="10" fill="#33CCFF"/>
+                        <path d="M8.5 9.5L10 12l1.5-2.5L13 12l1.5-2.5L16 12v3.5h-1.5v-2l-1.5 2h-1l-1.5-2v2H8.5v-3.5z" fill="#FFFFFF"/>
+                    </svg>
+                    Waze
+                </button>
+                <button class="modal-button cancel" id="cancelBtn">Cancel</button>
+            </div>
+        </div>
     </div>
 
     <!-- Music Button -->
@@ -170,6 +343,117 @@
     <!-- YouTube IFrame API -->
     <script src="https://www.youtube.com/iframe_api"></script>
     <script>
+        // Address and map functionality
+        const address = "NO 9, JLN KUALA PEDAS, KG SG TIMUN, 71150 LINGGI, NEGERI SEMBILAN";
+        const encodedAddress = encodeURIComponent(address);
+
+        const addressOverlay = document.getElementById('addressOverlay');
+        const mapModal = document.getElementById('mapModal');
+        const googleMapsBtn = document.getElementById('googleMapsBtn');
+        const wazeBtn = document.getElementById('wazeBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const weddingImage = document.getElementById('weddingImage');
+        const imageWrapper = document.querySelector('.image-wrapper');
+
+        // Precise overlay positioning based on image dimensions
+        // Adjust these percentages to match your image's address position
+        const OVERLAY_CONFIG = {
+            bottomPercent: 20,    // Distance from bottom (adjust if address is higher/lower)
+            widthPercent: 65,    // Width of overlay (adjust if address is wider/narrower)
+            heightPercent: 5,   // Height of overlay (adjust if address takes more/less space)
+            leftOffsetPercent: 0 // Horizontal offset (0 = centered, negative = left, positive = right)
+        };
+
+        function updateOverlayPosition() {
+            if (!weddingImage.complete || weddingImage.naturalWidth === 0) {
+                return;
+            }
+
+            // Get the actual rendered dimensions and position of the image
+            const imgRect = weddingImage.getBoundingClientRect();
+            const wrapperRect = imageWrapper.getBoundingClientRect();
+
+            // Calculate overlay dimensions based on image size
+            const overlayWidth = (imgRect.width * OVERLAY_CONFIG.widthPercent) / 100;
+            const overlayHeight = (imgRect.height * OVERLAY_CONFIG.heightPercent) / 100;
+            const bottomOffset = (imgRect.height * OVERLAY_CONFIG.bottomPercent) / 100;
+
+            // Calculate where the image is positioned within the wrapper
+            const imageLeftOffset = imgRect.left - wrapperRect.left;
+            const imageTopOffset = imgRect.top - wrapperRect.top;
+
+            // Position overlay relative to wrapper, accounting for image position
+            addressOverlay.style.width = overlayWidth + 'px';
+            addressOverlay.style.height = overlayHeight + 'px';
+            addressOverlay.style.bottom = (wrapperRect.height - imageTopOffset - imgRect.height + bottomOffset) + 'px';
+            addressOverlay.style.left = (imageLeftOffset + (imgRect.width / 2)) + 'px';
+            addressOverlay.style.transform = 'translateX(-50%)';
+        }
+
+        // Flash animation function - keeps pulsing continuously
+        function flashOverlay() {
+            addressOverlay.classList.add('flash');
+        }
+
+        // Update overlay position when image loads and on resize
+        if (weddingImage.complete) {
+            updateOverlayPosition();
+            // Trigger flash after a short delay to ensure overlay is positioned
+            setTimeout(flashOverlay, 500);
+        } else {
+            weddingImage.addEventListener('load', function() {
+                updateOverlayPosition();
+                // Trigger flash after overlay is positioned
+                setTimeout(flashOverlay, 500);
+            });
+        }
+
+        window.addEventListener('resize', updateOverlayPosition);
+
+        // Also update on orientation change for mobile
+        window.addEventListener('orientationchange', function() {
+            setTimeout(updateOverlayPosition, 100);
+        });
+
+        // Show modal when address area is clicked
+        addressOverlay.addEventListener('click', function(e) {
+            e.stopPropagation();
+            mapModal.classList.add('show');
+        });
+
+        // Open Google Maps
+        googleMapsBtn.addEventListener('click', function() {
+            const googleMapsUrl = 'https://maps.app.goo.gl/DSHPN7YpwbDkWt2U8';
+            window.open(googleMapsUrl, '_blank');
+            mapModal.classList.remove('show');
+        });
+
+        // Open Waze
+        wazeBtn.addEventListener('click', function() {
+            const wazeUrl = 'https://waze.com/ul/hw22tfqyh9';
+            window.open(wazeUrl, '_blank');
+            mapModal.classList.remove('show');
+        });
+
+        // Close modal
+        cancelBtn.addEventListener('click', function() {
+            mapModal.classList.remove('show');
+        });
+
+        // Close modal when clicking outside
+        mapModal.addEventListener('click', function(e) {
+            if (e.target === mapModal) {
+                mapModal.classList.remove('show');
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && mapModal.classList.contains('show')) {
+                mapModal.classList.remove('show');
+            }
+        });
+
         const musicButton = document.getElementById('musicButton');
         const youtubeVideo = document.getElementById('youtubeVideo');
         const videoId = 'f0F6jMTPlY4';
